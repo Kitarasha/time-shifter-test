@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Time Shifter</title>
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="assets/icons/favicon.ico">
+</head>
+<body>
+    <canvas id="stars-canvas"></canvas>
+    <header>
+        <h1>Time Shifter</h1>
+    </header>
+    <main>
+        <div id="timeline-container">
+            <div id="timeline"></div>
+            <div id="alternative-timelines-container"></div>
+        </div>
+
+        <div id="modal" class="hidden">
+            <div class="modal-content">
+                <span id="close-modal">&times;</span>
+                <h2 id="event-title"></h2>
+                <p id="event-description">Описание события появится здесь...</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+
+    <!-- Скрипт для звёздного фона -->
+    <script>
+        const canvas = document.getElementById("stars-canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let stars = [];
+        const numStars = 250;
+        const maxLineDistance = 100;
+        const mouseRadius = 150;
+        const mouse = { x: null, y: null };
+
+        window.addEventListener("mousemove", (event) => {
+            mouse.x = event.x;
+            mouse.y = event.y;
+        });
+
+        window.addEventListener("mouseout", () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        class Star {
+            constructor(x, y, dx, dy, size) {
+                this.x = x; this.y = y; this.dx = dx; this.dy = dy; this.size = size;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+                ctx.fillStyle="white";
+                ctx.fill();
+            }
+            update() {
+                if (this.x + this.size > canvas.width || this.x - this.size < 0) this.dx = -this.dx;
+                if (this.y + this.size > canvas.height || this.y - this.size < 0) this.dy = -this.dy;
+                this.x += this.dx; this.y += this.dy;
+                this.draw();
+            }
+        }
+
+        function initStars() {
+            stars = [];
+            for (let i=0; i<numStars; i++) {
+                const size = Math.random()*2+1;
+                const x = Math.random()*canvas.width;
+                const y = Math.random()*canvas.height;
+                const dx=(Math.random()-0.5);
+                const dy=(Math.random()-0.5);
+                stars.push(new Star(x,y,dx,dy,size));
+            }
+        }
+
+        function connectStars() {
+            for (let i=0; i<stars.length; i++) {
+                for (let j=i+1; j<stars.length; j++) {
+                    const dist = Math.sqrt((stars[i].x - stars[j].x)**2+(stars[i].y - stars[j].y)**2);
+                    if(dist<maxLineDistance) {
+                        ctx.beginPath();
+                        ctx.moveTo(stars[i].x, stars[i].y);
+                        ctx.lineTo(stars[j].x, stars[j].y);
+                        ctx.strokeStyle=`rgba(255,255,255,${1-dist/maxLineDistance})`;
+                        ctx.lineWidth=0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function connectToMouse() {
+            if (mouse.x!==null && mouse.y!==null) {
+                for(let i=0; i<stars.length;i++){
+                    const dist = Math.sqrt((stars[i].x-mouse.x)**2+(stars[i].y-mouse.y)**2);
+                    if(dist<mouseRadius) {
+                        ctx.beginPath();
+                        ctx.moveTo(stars[i].x, stars[i].y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.strokeStyle=`rgba(255,255,255,${1-dist/mouseRadius})`;
+                        ctx.lineWidth=0.8;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            stars.forEach(s=>s.update());
+            connectStars();
+            connectToMouse();
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener("resize",()=>{
+            canvas.width=window.innerWidth;
+            canvas.height=window.innerHeight;
+            initStars();
+        });
+
+        initStars();
+        animate();
+    </script>
+</body>
+</html>
