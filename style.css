@@ -103,7 +103,7 @@ header {
 
 /* Альтернативные таймлайны и события */
 .alternative-timeline-wrapper {
-    position:absolute; width:300px; /* длина ветки */
+    position:absolute; width:100%; /* длина ветки */
     height:4px; /* высота линии */
     transform-origin:left center; 
 }
